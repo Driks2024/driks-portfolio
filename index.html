@@ -255,6 +255,39 @@ function InfiniteField() {
   );
 }
 
+/* ─── SCRAMBLE UTILITY ─── */
+const SCRAMBLE_CHARS = '!<>-_\\/[]{}=+*^?#▓▒░█01IA';
+
+function scramble(el, finalText, delay = 0) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const queue = Array.from(finalText).map((to, i) => ({
+        to,
+        start: Math.floor(Math.random() * 20),
+        end: Math.floor(Math.random() * 30) + 20 + i * 2,
+        ch: '',
+      }));
+      let frame = 0;
+      function tick() {
+        let out = '', done = 0;
+        for (const q of queue) {
+          if (frame >= q.end) { out += q.to; done++; }
+          else if (frame >= q.start) {
+            if (!q.ch || Math.random() < .3)
+              q.ch = SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+            out += `<span style="color:var(--green);opacity:.7">${q.ch}</span>`;
+          } else { out += `<span style="opacity:.2">${q.to}</span>`; }
+        }
+        el.innerHTML = out;
+        if (done === queue.length) { el.innerHTML = finalText; resolve(); return; }
+        frame++;
+        requestAnimationFrame(tick);
+      }
+      tick();
+    }, delay);
+  });
+}
+
 /* ─── SHARED HOOK ─── */
 function useReveal() {
   const ref = useRef(null);
@@ -321,11 +354,20 @@ function Nav() {
 /* ─── HERO ─── */
 function Hero() {
   const [scroll, setScroll] = useState(0);
+  const line1Ref = useRef(null);
+  const line2Ref = useRef(null);
+
   useEffect(() => {
     const fn = () => setScroll(window.scrollY);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  useEffect(() => {
+    if (line1Ref.current) scramble(line1Ref.current, 'Não existe limite', 300);
+    if (line2Ref.current) scramble(line2Ref.current, 'para quem pensa infinito.', 700);
+  }, []);
+
   const t = Math.min(scroll / 600, 1);
 
   return (
@@ -351,12 +393,8 @@ function Hero() {
         transform: `translateY(${t * -80}px)`,
         opacity: 1 - t * 1.2,
       }}>
-        <div>Não existe limite</div>
-        <div>
-          para quem{' '}
-          <em style={{ fontStyle: 'italic', color: 'var(--green)' }}>pensa</em>{' '}
-          <em style={{ fontStyle: 'italic', color: 'var(--mint)' }}>infinito.</em>
-        </div>
+        <div ref={line1Ref}>Não existe limite</div>
+        <div ref={line2Ref}>para quem pensa infinito.</div>
       </div>
 
       <div style={{
