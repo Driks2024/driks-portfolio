@@ -145,7 +145,7 @@ function InfiniteField() {
     }
 
     function initNodes() {
-      const count = Math.min(110, Math.max(38, Math.floor((w * h) / 18000)));
+      const count = Math.min(60, Math.max(24, Math.floor((w * h) / 32000)));
       nodes = Array.from({ length: count }, (_, i) => ({
         x: Math.random() * w,
         y: Math.random() * h,
@@ -164,7 +164,7 @@ function InfiniteField() {
 
       for (const n of nodes) {
         n.x += n.vx;
-        n.y += n.vy + scroll * .002;
+        n.y += n.vy;
         if (n.x < -20) n.x = w + 20;
         if (n.x > w + 20) n.x = -20;
         if (n.y < -20) n.y = h + 20;
@@ -173,14 +173,14 @@ function InfiniteField() {
         if (mouse.active) {
           const dx = mouse.x - n.x, dy = mouse.y - n.y;
           const d2 = dx * dx + dy * dy;
-          if (d2 < 40000) {
-            const f = .00008 * (1 - d2 / 40000);
+          if (d2 < 30000) {
+            const f = .00004 * (1 - d2 / 30000);
             n.vx += dx * f; n.vy += dy * f;
           }
         }
-        n.vx *= .985; n.vy *= .985;
-        if (Math.abs(n.vx) < .05) n.vx += (Math.random() - .5) * .04;
-        if (Math.abs(n.vy) < .05) n.vy += (Math.random() - .5) * .04;
+        n.vx *= .98; n.vy *= .98;
+        if (Math.abs(n.vx) < .04) n.vx += (Math.random() - .5) * .02;
+        if (Math.abs(n.vy) < .04) n.vy += (Math.random() - .5) * .02;
       }
 
       const LINK = 130;
@@ -352,10 +352,14 @@ function Nav() {
 }
 
 /* ─── HERO ─── */
+const CYCLE_WORDS = ['IA.', 'Agentes.', 'Modelos.', 'Dados.', 'Futuro.'];
+
 function Hero() {
   const [scroll, setScroll] = useState(0);
   const line1Ref = useRef(null);
-  const line2Ref = useRef(null);
+  const cycleRef = useRef(null);
+  const cycleIdx = useRef(0);
+  const running = useRef(false);
 
   useEffect(() => {
     const fn = () => setScroll(window.scrollY);
@@ -364,8 +368,23 @@ function Hero() {
   }, []);
 
   useEffect(() => {
-    if (line1Ref.current) scramble(line1Ref.current, 'Não existe limite', 300);
-    if (line2Ref.current) scramble(line2Ref.current, 'para quem pensa infinito.', 700);
+    // Scramble static line
+    if (line1Ref.current) scramble(line1Ref.current, 'Possibilidades infinitas através de:', 300);
+
+    // Start cycling words after initial scramble
+    const start = setTimeout(async () => {
+      if (running.current) return;
+      running.current = true;
+      const el = cycleRef.current;
+      if (!el) return;
+      await scramble(el, CYCLE_WORDS[0], 0);
+      while (true) {
+        await new Promise(r => setTimeout(r, 2200));
+        cycleIdx.current = (cycleIdx.current + 1) % CYCLE_WORDS.length;
+        await scramble(el, CYCLE_WORDS[cycleIdx.current], 0);
+      }
+    }, 800);
+    return () => clearTimeout(start);
   }, []);
 
   const t = Math.min(scroll / 600, 1);
@@ -393,8 +412,8 @@ function Hero() {
         transform: `translateY(${t * -80}px)`,
         opacity: 1 - t * 1.2,
       }}>
-        <div ref={line1Ref}>Não existe limite</div>
-        <div ref={line2Ref}>para quem pensa infinito.</div>
+        <div ref={line1Ref}>Possibilidades infinitas através de:</div>
+        <div ref={cycleRef} style={{ color: 'var(--green)', fontStyle: 'italic', minHeight: '1.1em' }}>IA.</div>
       </div>
 
       <div style={{
