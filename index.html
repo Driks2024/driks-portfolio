@@ -149,8 +149,8 @@ function InfiniteField() {
       nodes = Array.from({ length: count }, (_, i) => ({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - .5) * .28,
-        vy: (Math.random() - .5) * .28,
+        vx: (Math.random() - .5) * .10,
+        vy: (Math.random() - .5) * .10,
         r: Math.random() * 1.6 + .6,
         c: COLORS[i % COLORS.length],
         phase: Math.random() * Math.PI * 2,
@@ -178,9 +178,9 @@ function InfiniteField() {
             n.vx += dx * f; n.vy += dy * f;
           }
         }
-        n.vx *= .98; n.vy *= .98;
-        if (Math.abs(n.vx) < .04) n.vx += (Math.random() - .5) * .02;
-        if (Math.abs(n.vy) < .04) n.vy += (Math.random() - .5) * .02;
+        n.vx *= .992; n.vy *= .992;
+        if (Math.abs(n.vx) < .015) n.vx += (Math.random() - .5) * .008;
+        if (Math.abs(n.vy) < .015) n.vy += (Math.random() - .5) * .008;
       }
 
       const LINK = 130;
@@ -357,6 +357,8 @@ const CYCLE_WORDS = ['IA.', 'Agentes.', 'Modelos.', 'Dados.', 'Futuro.'];
 function Hero() {
   const [scroll, setScroll] = useState(0);
   const line1Ref = useRef(null);
+  const line2Ref = useRef(null);
+  const line3Ref = useRef(null);
   const cycleRef = useRef(null);
   const cycleIdx = useRef(0);
   const running = useRef(false);
@@ -368,10 +370,10 @@ function Hero() {
   }, []);
 
   useEffect(() => {
-    // Scramble static line
-    if (line1Ref.current) scramble(line1Ref.current, 'Possibilidades infinitas através de:', 300);
+    scramble(line1Ref.current, 'Possibilidades', 200);
+    scramble(line2Ref.current, 'infinitas', 500);
+    scramble(line3Ref.current, 'através de', 800);
 
-    // Start cycling words after initial scramble
     const start = setTimeout(async () => {
       if (running.current) return;
       running.current = true;
@@ -379,11 +381,11 @@ function Hero() {
       if (!el) return;
       await scramble(el, CYCLE_WORDS[0], 0);
       while (true) {
-        await new Promise(r => setTimeout(r, 2200));
+        await new Promise(r => setTimeout(r, 2400));
         cycleIdx.current = (cycleIdx.current + 1) % CYCLE_WORDS.length;
         await scramble(el, CYCLE_WORDS[cycleIdx.current], 0);
       }
-    }, 800);
+    }, 1200);
     return () => clearTimeout(start);
   }, []);
 
@@ -411,9 +413,14 @@ function Hero() {
         padding: '20px 0',
         transform: `translateY(${t * -80}px)`,
         opacity: 1 - t * 1.2,
+        color: 'var(--ink)',
       }}>
-        <div ref={line1Ref}>Possibilidades infinitas através de:</div>
-        <div ref={cycleRef} style={{ color: 'var(--green)', fontStyle: 'italic', minHeight: '1.1em' }}>IA.</div>
+        <div ref={line1Ref}>Possibilidades</div>
+        <div ref={line2Ref}>infinitas</div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25em', flexWrap: 'wrap' }}>
+          <span ref={line3Ref}>através de</span>
+          <span ref={cycleRef} style={{ color: 'var(--ink)', display: 'inline-block', minWidth: '3ch' }}>IA.</span>
+        </div>
       </div>
 
       <div style={{
